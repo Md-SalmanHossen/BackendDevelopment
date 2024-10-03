@@ -1,16 +1,33 @@
 const express = require('express');
 const multer = require('multer');
+const path = require('path');
 
 const app = express();
 
 // Final upload folder
 const UPLOAD_FOLDER = './uploads';
 
-// Multer configuration
+// Custom storage engine
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, UPLOAD_FOLDER);  // Set the folder where files will be saved
+    },
+    filename: (req, file, cb) => {
+        const fileExt = path.extname(file.originalname);  // Get file extension
+        const fileName = file.originalname
+            .replace(fileExt, "")
+            .toLowerCase()
+            .split(" ")
+            .join("-") + "-" + Date.now();  // Create a unique file name
+        cb(null, fileName + fileExt);  // Save the file with the new name
+    }
+});
+
+// Multer configuration without `dest`
 const upload = multer({
-    dest: UPLOAD_FOLDER,
+    storage: storage,  // Using the custom storage configuration
     limits: {
-        fileSize: 1 * 1024 * 1024 // Limit file size to 1MB (1 * 1024 * 1024 bytes)
+        fileSize: 1 * 1024 * 1024  // Limit file size to 1MB (1 * 1024 * 1024 bytes)
     },
     fileFilter: (req, file, cb) => {
         // File type filtering
@@ -37,15 +54,13 @@ app.post('/', upload.fields([
         maxCount: 3 // Multiple files for gallery (up to 3 files)
     }   
 ]), (req, res, next) => {
-    if (!req.files || (Object.keys(req.files).length === 0)) {
+    if (!req.files || Object.keys(req.files).length === 0) {
         return res.status(400).send('No files were uploaded.');
     }
 
     // If files are uploaded successfully
     res.send('Files uploaded successfully.');
 });
-
-
 
 // Global error handler for Multer and other errors
 app.use((err, req, res, next) => {
@@ -61,8 +76,6 @@ app.use((err, req, res, next) => {
         next();
     }
 });
-
-
 
 // Start the server
 app.listen(4000, () => {
