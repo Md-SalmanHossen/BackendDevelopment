@@ -1,31 +1,70 @@
+const express = require('express');
+const multer = require('multer');
 
-const express=require('express');
-const multer=require('multer');
+const app = express();
 
-const app=express();
+// Final upload folder
+const UPLOAD_FOLDER = './uploads';
 
-//process the multer file upload
+// Multer configuration
+const upload = multer({
+    dest: UPLOAD_FOLDER,
+    limits: {
+        fileSize: 1 * 1024 * 1024 // Limit file size to 1MB (1 * 1024 * 1024 bytes)
+    },
+    fileFilter: (req, file, cb) => {
+        // File type filtering
+        if (
+            file.mimetype === "image/png" ||
+            file.mimetype === "image/jpeg" ||
+            file.mimetype === "image/jpg"
+        ) {
+            cb(null, true);  // Accept the file
+        } else {
+            cb(new Error('Only .png, .jpeg, and .jpg files are allowed!'), false);  // Reject the file
+        }
+    }
+});
 
-//final upload folder
-const UPLOAD_FOLDER='./uploads';
+// Handling file uploads (for multiple fields)
+app.post('/', upload.fields([
+    { 
+        name: "avatar", 
+        maxCount: 1 // Single file for avatar
+    },   
+    { 
+        name: "gallery", 
+        maxCount: 3 // Multiple files for gallery (up to 3 files)
+    }   
+]), (req, res, next) => {
+    if (!req.files || (Object.keys(req.files).length === 0)) {
+        return res.status(400).send('No files were uploaded.');
+    }
+
+    // If files are uploaded successfully
+    res.send('Files uploaded successfully.');
+});
 
 
-//Prepare the final multer upload object
-var upload=multer({
-   dest:UPLOAD_FOLDER
-})
 
-//for single file : upload.single('avatar');
-//for multiple file: upload.array('avatar',3);
-//array like object:upload.fields([{"",maxCount:1},{"",maxCount:1}]);
+// Global error handler for Multer and other errors
+app.use((err, req, res, next) => {
+    if (err) {
+        if (err instanceof multer.MulterError) {
+            // Multer-specific errors (e.g., file size limit)
+            res.status(500).send('File upload error.');
+        } else {
+            // General errors
+            res.status(500).send(err.message);
+        }
+    } else {
+        next();
+    }
+});
 
-app.post('/',upload.fields([
-   {"name":"avatar",maxCount:1},
-   {"name":"gallery",maxCount:3}
-]),(req,res)=>{
-   res.send('hello world')
-})
 
-app.listen('4000',()=>{
-   console.log('locally this port will running');
-})
+
+// Start the server
+app.listen(4000, () => {
+    console.log('Server running on http://localhost:4000');
+});
