@@ -1,49 +1,54 @@
-
-const express=require('express');
+const express = require('express');
 const router = express.Router();
-const  mongoose = require('mongoose');
-const todoSchema=require('../schemas/todoSchema');
-const Todo = new mongoose.model('Todo',todoSchema);
+const mongoose = require('mongoose');
+const todoSchema = require('../schemas/todoSchema');
+const Todo = new mongoose.model('Todo', todoSchema);
 
-
-//get all the todos
-router.get('/', async(req,res)=>{
-
+// Get all the todos
+router.get('/', async (req, res) => {
+    try {
+        const todos = await Todo.find(); // Fetch all todos
+        res.status(200).json(todos); // Return todos
+    } catch (err) {
+        res.status(500).json("There was a server-side error!"); // Error handling
+    }
 });
 
-//get todo by id
-router.get('/:id', async(req,res)=>{
-
+// Get todo by id
+router.get('/:id', async (req, res) => {
+    try {
+        const todo = await Todo.findById(req.params.id); // Find todo by ID
+        if (!todo) {
+            return res.status(404).json('Todo not found!'); // If todo not found
+        }
+        res.status(200).json(todo); // Return the found todo
+    } catch (err) {
+        res.status(500).json("There was a server-side error!"); // Error handling
+    }
 });
 
-
-//post a todo
-router.post('/', async(req,res)=>{
-
+// Post a todo
+router.post('/', async (req, res) => {
     try {
         const newTodo = new Todo(req.body);
         await newTodo.save();
-        res.status(200).json('todo was inserted successfully!');
+        res.status(200).json('Todo was inserted successfully!'); // Successful insertion response
     } catch (err) {
-        res.status(500).json("There was a server-side error!");
-    }
-
-})
-
-
-//post multiple todo.
-router.post('/all', async(req,res)=>{
-    try{
-       await Todo.insertMany(req.body);
-       res.status(200).json('todo was inserted successfully!');
-    }catch(err){
-        res.status(500).json('there were a server side error!')
+        res.status(500).json("There was a server-side error!"); // Error handling
     }
 });
 
+// Post multiple todos.
+router.post('/all', async (req, res) => {
+    try {
+        await Todo.insertMany(req.body); // Insert multiple todos
+        res.status(200).json('Todos were inserted successfully!'); // Successful insertion response
+    } catch (err) {
+        res.status(500).json('There was a server-side error!'); // Error handling
+    }
+});
 
-//put todo
-// put todo
+// Put todo
 router.put('/:id', async (req, res) => {
     try {
         const result = await Todo.updateOne(
@@ -62,11 +67,20 @@ router.put('/:id', async (req, res) => {
     }
 });
 
+// Delete todo
+router.delete('/:id', async (req, res) => {
+    try {
+        const result = await Todo.deleteOne({ _id: req.params.id }); // Use deleteOne to remove the todo by ID
 
+        // Check if any document was deleted
+        if (result.deletedCount === 0) {
+            return res.status(404).json('Todo not found!'); // No document was found to delete
+        }
 
-//delete todo
-router.delete('./:id', async(req,res)=>{
+        res.status(200).json('Todo was deleted successfully!'); // Successful deletion response
+    } catch (err) {
+        res.status(500).json('There was a server-side error!'); // Error handling
+    }
+});
 
-})
-
-module.exports=router;
+module.exports = router;
