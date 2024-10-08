@@ -43,20 +43,25 @@ router.post('/all', async(req,res)=>{
 
 
 //put todo
-router.put('/', async(req,res)=>{
-    try{
+// put todo
+router.put('/:id', async (req, res) => {
+    try {
         const result = await Todo.updateOne(
-            {_id:req.params.id},
-            {$set:{status:"active"}},
+            { _id: req.params.id }, // Accessing the todo ID from the URL parameters
+            { $set: req.body } // Update fields with the data from the request body
         );
-        if(result.modifiedCount==0){
-            return res.status(404).json('todo not found or no changes model!')
+
+        // Check if any document was modified
+        if (result.modifiedCount === 0) {
+            return res.status(404).json('Todo not found or no changes made!'); // No document was found to update
         }
-        res.status(200).json('Todo was updated successfully!');
-    }catch(err){
-        res.status(500).json('there were a server side error!')
+
+        res.status(200).json('Todo was updated successfully!'); // Successful update response
+    } catch (err) {
+        res.status(500).json('There was a server-side error!'); // Error handling
     }
 });
+
 
 
 //delete todo
