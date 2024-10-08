@@ -44,8 +44,19 @@ router.post('/all', async(req,res)=>{
 
 //put todo
 router.put('/', async(req,res)=>{
-
-})
+    try{
+        const result = await Todo.updateOne(
+            {_id:req.params.id},
+            {$set:{status:"active"}},
+        );
+        if(result.modifiedCount==0){
+            return res.status(404).json('todo not found or no changes model!')
+        }
+        res.status(200).json('Todo was updated successfully!');
+    }catch(err){
+        res.status(500).json('there were a server side error!')
+    }
+});
 
 
 //delete todo
