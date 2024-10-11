@@ -1,12 +1,11 @@
+const cookieParser = require('cookie-parser');
+const jwt = require('jsonwebtoken');
+const express = require('express');
+const cors = require('cors');
 
-const cookieParser=require('cookie-parser');
-const bcrypt=require('bcrypt')
-const express=require('express');
-const cors=require('cors');
-const app=express();
+const app = express();
 
-
-//middleware
+// Middleware
 app.use(cors());
 app.use(express.json());
 app.use(cookieParser());
@@ -28,12 +27,9 @@ app.get('/read',(req,res)=>{
 */
 //$2b$10$OHH7hhgp68/idRTjL6oLUenvlswuPe/u0568opI3Mo9QoyGl1ioD6
 
-//
-app.get('/',(req,res)=>{
-    res.send('working');
-})
 
 
+/*
 //data encrypt
 app.get('/read',(req,res)=>{
     bcrypt.genSalt(10,(err,salt)=>{
@@ -50,6 +46,22 @@ app.get('/decrypt',(req,res)=>{
         res.send('running')
     })
 })
+*/
+
+// Generate and set the token in a cookie
+app.get('/', (req, res) => {
+    let token = jwt.sign({ email: "salman@gmail.com" }, "secret-token");
+    res.cookie("token", token);
+    res.send("Token set in cookie: done");
+});
+
+// Verify and read the token from the cookie
+app.get('/read', (req, res) => {
+    // Directly verify the token from the cookie
+    let data = jwt.verify(req.cookies.token, "secret-token");
+    console.log(data);
+    res.send("Token verified successfully.");
+});
 
 
 //running port
