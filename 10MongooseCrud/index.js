@@ -1,33 +1,35 @@
+const express = require('express');
+const mongoose = require('mongoose');
+const todoHandler = require('./routes/todoHandler');
+const cors = require('cors'); // Import CORS middleware
 
-const express=require('express');
-const mongoose=require('mongoose');
-const todoHandler=require('./routes/todoHandler');
-
-
-const app=express();
+const app = express();
 app.use(express.json());
+app.use(cors()); // Enable CORS for all routes
 
-//database connection with mongoose
+// Database connection with Mongoose
+const mongoURI = 'mongodb://localhost/todos'; // MongoDB connection string
 mongoose
-    .connect('mongodb://localhost/todos')
-    .then(()=>console.log('connecting successfully '))
-    .catch(err=>console.log('Database connection error:',err));
+    .connect(mongoURI)
+    .then(() => console.log('Connected successfully to MongoDB'))
+    .catch(err => console.log('Database connection error:', err));
 
+// Application routes
+app.use('/todo', todoHandler);
 
-//application routes
-app.use('/todo',todoHandler)
-
-
-//default error handler
-function errorHandler(err,req,res,next){
-    if(res.headerSent){
+// Default error handler
+function errorHandler(err, req, res, next) {
+    if (res.headersSent) {
         return next(err);
     }
-    res.status(500).json({err:err.message});
+    res.status(500).json({ error: err.message });
 }
 
+// Use the error handler middleware
+app.use(errorHandler);
 
-
-app.listen(3000,()=>{
-    console.log('app listening at port 3000');
-})
+// Listen on a specified port
+const PORT = 3000; // Directly set the port number
+app.listen(PORT, () => {
+    console.log(`App listening at port ${PORT}`);
+});
